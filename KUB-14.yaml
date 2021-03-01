@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-dp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cache-dp
+  template:
+    metadata:
+      labels:
+        app: cache-dp
+    spec:
+      containers:
+        - name: memcached
+          image: memcached:latest
+          resources:
+            limits:
+              cpu: 100m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 500Mi  
+        - name: redis
+          image: redis:latest
+          resources:
+            limits:
+              cpu: 100m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 500Mi    
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cpu-and-mem
+spec:
+  hard:
+    limits.cpu: 4000m
+    limits.memory: 16384Mi              

@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-dp
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: web-dp
+  template:
+    metadata:
+      labels:
+        app: web-dp
+    spec:
+      containers:
+        - name: httpd
+          image: httpd:latest

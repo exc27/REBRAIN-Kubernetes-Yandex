@@ -1,0 +1,5 @@
+ingress:
+    annotations: {}
+    fqdn: api.dev.kis.im
+public_env_variables:
+  LISTEN: ":8080"

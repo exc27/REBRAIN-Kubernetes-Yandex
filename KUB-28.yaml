@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-dp
+  template:
+    metadata:
+      labels:
+        app: nginx-dp
+    spec:
+      containers:
+        - name: ubuntu
+          image: ubuntu
+          command: ["dd", "if=/dev/zero", "of=/dev/null"]
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: vpa-nginx
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: ginx-dp
+  updatePolicy:
+    updateMode: "Off"

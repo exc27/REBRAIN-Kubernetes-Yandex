@@ -1,0 +1,6 @@
+apiVersion: v2
+name: KUB-29
+description: Основы пакетного менеджера Helm
+type: application
+version: 0.2.0
+appVersion: "1.16.0"

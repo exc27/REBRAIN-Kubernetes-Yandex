@@ -1,0 +1,62 @@
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  YA_REGISTRY: cr.yandex/crp9hkab9k0c0er97bi7
+  SERVICE_NAME: rebrain-kub-35
+  STUDENT_ID: 1862
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    IMAGE_NAME: ${YA_REGISTRY}/${SERVICE_NAME}-${STUDENT_ID}:${CI_COMMIT_SHORT_SHA}
+  before_script:
+    # Problem https://stackoverflow.com/questions/43248455/gitlab-runner-local-build-login-from-non-tty-device
+    #- mkdir -p ~/.docker/ && cat $DOCKER_CONF > ~/.docker/config.json
+    - cat $YC_SA_KEY | docker login -u json_key --password-stdin cr.yandex
+  script:
+    - docker build -t ${IMAGE_NAME} ./
+    - docker push ${IMAGE_NAME}
+
+.deploy_template:
+  stage: deploy
+  image: vozerov/helm-deployer:latest
+  script:
+    # Setup YCloud
+    - cat $YC_SA_KEY > key.json
+    - yc config profile create sa-profile
+    - yc config set service-account-key key.json
+    - yc config set cloud-id ${YC_CLOUD_ID}
+    - yc config set folder-id ${YC_FOLDER_ID}
+    - yc managed-kubernetes cluster get-credentials ${KUBE_CLUSTER} --external
+    # Setup GPG for Helm secrets
+    - echo "$HELM_SECRET" > .helm_secrets_gpg_key.key
+    - gpg --allow-secret-key-import --import .helm_secrets_gpg_key.key
+    # Deploy via Helm
+    - cd .infra/
+    - helm secrets upgrade --wait --install $SERVICE_NAME --namespace ${KUBE_NAMESPACE} --values values.${CI_ENVIRONMENT_NAME}.yaml --values  secrets.${CI_ENVIRONMENT_NAME}.yaml --set image.repository=${YA_REGISTRY} --set image.image=${SERVICE_NAME}-${STUDENT_ID} --set image.tag=${CI_COMMIT_SHORT_SHA} chart/
+
+stage deploy:
+  extends: .deploy_template
+  variables:
+    KUBE_CLUSTER: "kub-test"
+    KUBE_NAMESPACE: "stage"
+    BUILD_VARIANT: "stage"
+  environment:
+    name: stage
+  when: manual
+
+prod deploy:
+  extends: .deploy_template
+  variables:
+    KUBE_CLUSTER: "kub-test"
+    KUBE_NAMESPACE: "prod"
+    BUILD_VARIANT: "prod"
+  environment:
+    name: prod
+  when: manual

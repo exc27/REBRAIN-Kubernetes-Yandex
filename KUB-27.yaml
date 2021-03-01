@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-dp
+  template:
+    metadata:
+      labels:
+        app: nginx-dp
+    spec:
+      containers:
+        - name: nginx
+          image: alpine
+          command: ["dd", "if=/dev/zero", "of=/dev/null"]
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi  
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-nginx
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-dp
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 20

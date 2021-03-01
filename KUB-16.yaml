@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dp-label
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: dp-label
+  template:
+    metadata:
+      labels:
+        app: dp-label
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+      nodeSelector:
+          usercase: workload    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dp-taint
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: dp-taint
+  template:
+    metadata:
+      labels:
+        app: dp-taint
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+      nodeSelector:
+          usercase: workload 
+      tolerations:
+        - effect: NoSchedule
+          key: dedicated
+          value: "true"              

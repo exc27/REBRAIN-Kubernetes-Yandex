@@ -1,0 +1,16 @@
+deployment:
+    name: nginx-dp
+    image: nginx
+    port: 80
+    replicas: 4
+
+service:
+    name: nginx-svc
+    type: ClusterIP
+    port: 80
+
+ingress:
+    name: nginx-ingress
+    host: kub-29.rebrainme.com
+    path: /
+    port: 80

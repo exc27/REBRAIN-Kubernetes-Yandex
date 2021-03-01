@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-dp
+  template:
+    metadata:
+      labels:
+        app: nginx-dp
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+              protocol: "TCP"
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: svc-internal
+spec:
+ type: ClusterIP
+ selector:
+    app: nginx-dp
+ ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+spec:
+  rules:
+  - host: test.ingress.rebrainme.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: svc-internal
+          servicePort: 80
+
